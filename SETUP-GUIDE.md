@@ -1,106 +1,87 @@
-# JobReady Resume — Setup Guide (step by step)
+# JobReady Resume — Deploy Guide (GitHub → Vercel → Hostinger domain)
 
-Total time: ~45 minutes. Aapko koi code likhna nahi hai — sirf copy-paste aur click.
-Ek step complete karke hi next step par jaiye.
+Live address: **https://resume.brightwayjobs.in**
+Kisi bhi secret key ko chat, GitHub ya kisi file me paste mat kijiye — sirf Vercel ke Environment Variables screen me.
 
 ---
 
 ## STEP 1 — Supabase (database + login)
 
-1. https://supabase.com → **Sign in** → **New project**
-   - Name: `jobready-resume`
-   - Database password: koi strong password (save kar lijiye)
-   - Region: **South Asia (Mumbai)**
-   - **Create new project** → 2 minute wait.
-2. Left menu → **SQL Editor** → **New query**
-   - Is ZIP ka file `supabase/schema.sql` Notepad me kholiye → sab copy (Ctrl+A, Ctrl+C) → yahan paste → **Run**.
-   - "Success. No rows returned" aana chahiye.
-3. Phir se **New query** → `supabase/seed.sql` ka pura content paste → **Run**.
-   (Isse 53 jobs, 28 qualifications aur 4 templates add ho jayenge.)
-4. Left menu → **Project Settings → API Keys** (ya **API**). Ye 3 cheezein Notepad me save kijiye:
-   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role` `secret` key → `SUPABASE_SERVICE_ROLE_KEY` (ye kisi ko mat dikhaiye)
-   - Agar "Publishable key" / "Secret key" dikhe to: Publishable → ANON_KEY, Secret → SERVICE_ROLE_KEY. (Ya **Legacy API Keys** tab se anon/service_role le lijiye.)
-5. Left menu → **Authentication → Sign In / Providers → Email** → **Confirm email** ko **OFF** kijiye → **Save**.
-   (Supabase ka free email system sirf aapke team ko email bhejta hai, isliye students ko confirmation mail nahi jayega. Baad me Brevo/Resend SMTP lagakar ise ON kar sakte hain.)
+1. https://supabase.com → **New project** → Name `jobready-resume`, Region **South Asia (Mumbai)** → **Create**.
+2. **SQL Editor → New query** → `supabase/schema.sql` ka pura content paste → **Run**.
+3. **New query** → `supabase/seed.sql` paste → **Run**.
+4. **Authentication → Sign In / Providers → Email** → **Confirm email = OFF** → **Save**.
+   (Supabase ka free email sirf team ko jata hai. Baad me custom SMTP lagakar ON kar sakte hain.)
+5. **Authentication → URL Configuration**
+   - Site URL: `https://resume.brightwayjobs.in`
+   - Redirect URLs → **Add URL**: `https://resume.brightwayjobs.in/**`
+   - (Local testing ke liye optional: `http://localhost:3000/**`)
 
-## STEP 2 — Razorpay keys
+## STEP 2 — Razorpay
 
-1. https://dashboard.razorpay.com → pehle **Test Mode** ON rakhiye (top par toggle).
-2. **Account & Settings → API Keys → Generate Key**
-   - Key Id → `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-   - Key Secret → `RAZORPAY_KEY_SECRET`
-3. Webhook abhi nahi — Step 5 me karenge (website ka URL chahiye).
+1. https://dashboard.razorpay.com → pehle **Test Mode**.
+2. **Account & Settings → API Keys → Generate Key**. Key Id aur Secret sirf Vercel me daalenge (Step 4).
+3. **Account & Settings → Payment capture** → **Automatic** (default) rehne dijiye.
 
-## STEP 3 — Code GitHub par upload
+## STEP 3 — GitHub
 
-1. https://github.com → **New repository** → name `jobready-resume` → **Private** → **Create**.
-2. **uploading an existing file** link par click.
-3. ZIP ko apne computer par extract kijiye. `jobready-resume` folder ke **andar** ki saari files aur folders select karke browser me drag-drop kijiye.
-4. **Commit changes** click.
+1. https://github.com/new → name `jobready-resume` → **Private** → **Create repository**.
+2. **uploading an existing file** → extracted `jobready-resume` folder ke **andar** ki saari files/folders drag-drop → **Commit changes**.
+3. Check: `package.json` repository ke pehle page par dikhna chahiye.
 
-## STEP 4 — Vercel par deploy
+## STEP 4 — Vercel
 
-1. https://vercel.com → **Add New → Project** → GitHub se `jobready-resume` **Import**.
-2. **Environment Variables** me ye sab add kijiye (Name = left, Value = aapki value):
+1. https://vercel.com → **Add New → Project** → GitHub `jobready-resume` → **Import**.
+2. Framework: **Next.js** (auto). Root Directory: `./`. Build/Install commands: default rehne dijiye.
+3. **Environment Variables** khol kar ye 12 add kijiye (Environment: **Production** aur **Preview** tick rakhiye):
 
-| Name | Value |
-|---|---|
-| NEXT_PUBLIC_SUPABASE_URL | Step 1 se |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY | Step 1 se |
-| SUPABASE_SERVICE_ROLE_KEY | Step 1 se |
-| NEXT_PUBLIC_RAZORPAY_KEY_ID | Step 2 se |
-| RAZORPAY_KEY_SECRET | Step 2 se |
-| RAZORPAY_WEBHOOK_SECRET | koi bhi lamba random text, e.g. `jr-webhook-8f3k29x` |
-| NEXT_PUBLIC_SITE_URL | `https://resume.yourdomain.com` (ya Vercel URL) |
-| NEXT_PUBLIC_APP_NAME | `JobReady Resume` |
-| ADMIN_EMAILS | aapka email (jisse aap login karenge) |
-| ABUSE_SALT | koi bhi random text |
-| NEXT_PUBLIC_SUPPORT_EMAIL | support email |
-| NEXT_PUBLIC_SUPPORT_WHATSAPP | `91` + WhatsApp number |
+| Name | Kahan se | Type |
+|---|---|---|
+| NEXT_PUBLIC_SUPABASE_URL | Supabase → Settings → Data API → Project URL | Config (public) |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase → Settings → API Keys → anon / publishable | Config (public) |
+| SUPABASE_SERVICE_ROLE_KEY | Supabase → API Keys → service_role / secret | **Secret** — Sensitive ON |
+| NEXT_PUBLIC_RAZORPAY_KEY_ID | Razorpay → API Keys → Key Id | Config (public) |
+| RAZORPAY_KEY_SECRET | Razorpay → API Keys → Key Secret | **Secret** — Sensitive ON |
+| RAZORPAY_WEBHOOK_SECRET | Aap khud banaiye (20+ random letters/numbers) | **Secret** — Sensitive ON |
+| NEXT_PUBLIC_SITE_URL | `https://resume.brightwayjobs.in` | Config |
+| NEXT_PUBLIC_APP_NAME | `JobReady Resume` | Config |
+| ADMIN_EMAILS | aapka login email (comma se multiple) | Config (private) |
+| ABUSE_SALT | Aap khud banaiye (20+ random letters/numbers) | **Secret** — Sensitive ON |
+| NEXT_PUBLIC_SUPPORT_EMAIL | support email | Config |
+| NEXT_PUBLIC_SUPPORT_WHATSAPP | `91XXXXXXXXXX` | Config |
 
-3. **Deploy** → 2–3 minute. Website URL mil jayega.
-4. (Optional) **Settings → Domains** → apna subdomain add kijiye, DNS me CNAME `cname.vercel-dns.com` lagaiye.
+   "Sensitive" toggle Secret wale variables par ON kijiye (value phir dobara dikhai nahi degi — yahi sahi hai).
+4. **Deploy** → 2–4 minute.
+5. Check: `https://<vercel-url>/api/health` kholiye → `"ok": true` aur `"missing": []` aana chahiye. (Sirf true/false dikhata hai, koi key nahi.)
 
-## STEP 5 — Final connections
+⚠️ `NEXT_PUBLIC_` wale variable build ke time website me jud jate hain. Inhe baad me badla to **Deployments → ⋯ → Redeploy** zaroor kijiye.
 
-**Supabase login redirect:**
-Supabase → **Authentication → URL Configuration**
-- Site URL: `https://aapki-website`
-- Redirect URLs → **Add URL**: `https://aapki-website/**`
+## STEP 5 — Hostinger domain jodna
 
-**Razorpay webhook (backup activation):**
+1. Vercel → Project → **Settings → Domains → Add** → `resume.brightwayjobs.in` → **Add**.
+2. Vercel ek CNAME value dikhayega (jaise `cname.vercel-dns.com` ya `xxxx.vercel-dns-017.com`) — copy kijiye.
+3. Hostinger → **Domains → brightwayjobs.in → DNS / Nameservers → DNS records**:
+   - Type: **CNAME**
+   - Name: `resume`
+   - Target / Points to: Vercel wali value
+   - TTL: default → **Add Record**
+   - Agar `resume` naam ka koi purana A/CNAME record hai to pehle use delete kijiye.
+4. 5–30 minute me Vercel me domain ke aage ✅ **Valid Configuration** aayega, SSL apne aap lagega.
+
+## STEP 6 — Razorpay webhook
+
 Razorpay → **Account & Settings → Webhooks → Add New Webhook**
-- URL: `https://aapki-website/api/razorpay/webhook`
+- URL: `https://resume.brightwayjobs.in/api/razorpay/webhook`
 - Secret: wahi text jo `RAZORPAY_WEBHOOK_SECRET` me dala
-- Events: ✅ `payment.captured` ✅ `order.paid` ✅ `payment.failed`
-- **Create Webhook**
+- Events: ✅ `payment.captured` ✅ `order.paid` ✅ `payment.failed` → **Create**
 
-## STEP 6 — Test
+## STEP 7 — Test
 
-1. Website kholiye → **Create My Resume — Free** → job select → details → **Sign up & Generate**.
-2. Account banate hi resume generate hoga → PDF / Word / Print check kijiye.
-3. Dusra resume banaiye → ₹9 popup aana chahiye → Test mode me UPI `success@razorpay` se pay kijiye.
-4. `https://aapki-website/admin` kholiye → payment aur resume dikhna chahiye.
+1. `https://resume.brightwayjobs.in/api/health` → `ok: true`
+2. Free resume banaiye → PDF / Word / Print.
+3. Dusra resume → ₹9 popup → Test mode UPI `success@razorpay`.
+4. `/admin` → payment + resume dikhna chahiye.
 
-## STEP 7 — Live payments
+## STEP 8 — Live
 
-Sab test ho jaye to Razorpay me **Live Mode** → live API keys generate → Vercel → Settings → Environment Variables me dono Razorpay keys replace → Webhook live mode me bhi add → **Deployments → Redeploy**.
-
----
-
-### Admin panel (`/admin`)
-- **Dashboard** — users, resumes, revenue, active Pro, 14-day chart, top jobs
-- **Jobs** — naye job add/edit (skills, responsibilities, objective) — bina code
-- **Qualifications** — add/edit, rank se eligibility decide hoti hai
-- **Templates** — naam, colour, Free/Pro, hide
-- **Payments** — sab payments, status filter
-- **Users** — search, +1 credit, +30 days/1 year Pro, free reset, block
-
-### Abuse protection (already built)
-- 1 free resume per account **and** per device; same internet (IP) se 1 din me max 3 free
-- Pro "unlimited" = max 15 resumes/hour, 60/day per user
-- Max 10 payment attempts/hour
-- Admin se kisi bhi user ko block kar sakte hain
-- (Optional) Custom SMTP lagakar email confirmation ON kar sakte hain
+Razorpay **Live Mode** → live keys → Vercel me `NEXT_PUBLIC_RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` update → live mode me webhook dobara add → **Redeploy**.

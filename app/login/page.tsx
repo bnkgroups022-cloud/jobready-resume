@@ -2,6 +2,7 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase/client';
+import { getBrowserSiteUrl } from '@/lib/site';
 
 export default function LoginPage() {
   return (
@@ -17,15 +18,17 @@ function Login() {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>(params.get('mode') === 'signup' ? 'signup' : 'login');
   const [f, setF] = useState({ name: '', mobile: '', email: '', password: '' });
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ t: 'ok' | 'err'; m: string } | null>(null);
-  const sb = supabaseBrowser();
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const [msg, setMsg] = useState<{ t: 'ok' | 'err'; m: string } | null>(
+    params.get('error') === 'link' ? { t: 'err', m: 'That link has expired or was already used. Please login or request a new link.' } : null,
+  );
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     setBusy(true);
     try {
+      const sb = supabaseBrowser();
+      const origin = getBrowserSiteUrl();
       if (mode === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
         if (error) throw error;

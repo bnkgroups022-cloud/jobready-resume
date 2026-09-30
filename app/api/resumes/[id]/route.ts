@@ -4,6 +4,7 @@ import { candidateLevel } from '@/lib/engine';
 import { sanitizeResume, missingRequired } from '@/lib/validate';
 import { json } from '@/lib/request';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // Edit resume (Pro feature)

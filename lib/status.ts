@@ -1,3 +1,4 @@
+import 'server-only';
 import type { UserStatus } from './types';
 import { supabaseAdmin, isAdminEmail } from './supabase/server';
 

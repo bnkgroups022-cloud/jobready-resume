@@ -70,7 +70,7 @@ export async function startCheckout(product: ProductKey): Promise<{ ok: boolean;
           body: JSON.stringify(resp),
         });
         const vj = await v.json().catch(() => ({}));
-        resolve(v.ok ? { ok: true } : { ok: false, error: vj.error || 'Verification failed' });
+        resolve(v.ok && vj.ok ? { ok: true } : { ok: false, error: vj.error || 'Verification failed' });
       },
       modal: { ondismiss: () => resolve({ ok: false }) },
     });

@@ -88,3 +88,7 @@ export type UserStatus = {
   credits: number;
   isAdmin: boolean;
 };
+
+// Admin form field definitions (shared by server pages and client editors)
+export type FieldType = 'text' | 'number' | 'bool' | 'list' | 'textarea' | 'color';
+export type Field = { key: string; label: string; type: FieldType; required?: boolean };

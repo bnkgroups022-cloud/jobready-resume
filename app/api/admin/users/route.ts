@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/admin';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { json } from '@/lib/request';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {

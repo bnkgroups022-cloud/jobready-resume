@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { getUser, isAdminEmail } from '@/lib/supabase/server';
 
 export default async function Header() {
-  let user = null;
-  try { user = await getUser(); } catch {}
+  let user: { email?: string | null } | null = null;
+  try { user = await getUser(); } catch { /* not configured yet or network error */ }
   const name = process.env.NEXT_PUBLIC_APP_NAME || 'JobReady Resume';
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur print:hidden">

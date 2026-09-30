@@ -3,6 +3,7 @@ import { PRODUCTS, type ProductKey } from '@/lib/pricing';
 import { createRazorpayOrder } from '@/lib/razorpay';
 import { json } from '@/lib/request';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
       prefill: { name: prof?.name || '', email: user.email || '', contact: prof?.mobile || '' },
     });
   } catch (e: any) {
-    console.error('create-order', e);
+    console.error('create-order:', e?.message);
     return json({ error: 'Payment could not be started. Please try again.' }, 500);
   }
 }

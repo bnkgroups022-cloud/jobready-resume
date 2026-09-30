@@ -1,4 +1,7 @@
+import 'server-only';
 import { getUser, isAdminEmail } from './supabase/server';
+import type { Field } from './types';
+export type { Field, FieldType } from './types';
 
 export async function requireAdmin() {
   const user = await getUser();
@@ -6,8 +9,6 @@ export async function requireAdmin() {
   return user;
 }
 
-export type FieldType = 'text' | 'number' | 'bool' | 'list' | 'textarea' | 'color';
-export type Field = { key: string; label: string; type: FieldType; required?: boolean };
 
 export const ADMIN_TABLES: Record<string, { id: string; fields: Field[] }> = {
   jobs: {

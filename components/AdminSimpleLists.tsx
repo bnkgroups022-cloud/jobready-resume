@@ -1,6 +1,6 @@
 'use client';
 import AdminCrud from './AdminCrud';
-import type { Field } from '@/lib/admin';
+import type { Field } from '@/lib/types';
 export function AdminQualList({ rows, fields }: { rows: any[]; fields: Field[] }) {
   return <AdminCrud table="qualifications" idKey="id" rows={rows} fields={fields} titleKey="name" subtitle={(r) => `${r.group_name} · rank ${r.rank}`} />;
 }

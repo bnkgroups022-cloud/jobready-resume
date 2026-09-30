@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Field } from '@/lib/admin';
+import type { Field } from '@/lib/types';
 
 type Props = { table: string; idKey: string; rows: any[]; fields: Field[]; titleKey: string; subtitle?: (r: any) => string; allowAdd?: boolean; allowDelete?: boolean };
 

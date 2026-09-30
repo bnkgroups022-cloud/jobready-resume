@@ -3,6 +3,7 @@ import { candidateLevel } from '@/lib/engine';
 import { sanitizeResume, missingRequired } from '@/lib/validate';
 import { cleanDevice, ipHash, json } from '@/lib/request';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const ERRORS: Record<string, [number, string]> = {
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
   if (error) {
     const code = Object.keys(ERRORS).find((k) => error.message.includes(k));
     if (code) return json({ error: ERRORS[code][1], code }, ERRORS[code][0]);
-    console.error('create_resume', error);
+    console.error('create_resume:', error.message);
     return json({ error: 'Could not create resume. Please try again.' }, 500);
   }
   return json({ id });
