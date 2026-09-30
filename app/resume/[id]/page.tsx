@@ -1,3 +1,5 @@
+import { missingEnv, SUPABASE_ENV } from '@/lib/env';
+import SetupNotice from '@/components/SetupNotice';
 import { notFound } from 'next/navigation';
 import { getUser, supabaseAdmin } from '@/lib/supabase/server';
 import { getStatus } from '@/lib/status';
@@ -9,6 +11,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'My Resume' };
 
 export default async function ResumePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string }> }) {
+  const missingCfg = missingEnv(SUPABASE_ENV);
+  if (missingCfg.length) return <SetupNotice missing={missingCfg} />;
   const { id } = await params;
   const sp = await searchParams;
   const user = await getUser();

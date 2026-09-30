@@ -1,3 +1,5 @@
+import { missingEnv, SUPABASE_ENV } from '@/lib/env';
+import SetupNotice from '@/components/SetupNotice';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
@@ -15,6 +17,8 @@ const NAV = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const missingCfg = missingEnv(SUPABASE_ENV);
+  if (missingCfg.length) return <SetupNotice missing={missingCfg} />;
   if (!(await requireAdmin())) notFound();
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">

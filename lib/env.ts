@@ -29,3 +29,11 @@ export function requireEnv(name: EnvName): string {
 export function hasEnv(name: EnvName): boolean {
   return !!(process.env[name] || '').trim();
 }
+
+// Names (never values) of required variables that are not set.
+export function missingEnv(names: readonly EnvName[]): EnvName[] {
+  return names.filter((n) => !hasEnv(n));
+}
+
+// What pages that talk to Supabase on the server need.
+export const SUPABASE_ENV: readonly EnvName[] = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];

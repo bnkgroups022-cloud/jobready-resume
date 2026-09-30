@@ -1,3 +1,5 @@
+import { missingEnv, SUPABASE_ENV } from '@/lib/env';
+import SetupNotice from '@/components/SetupNotice';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getUser, supabaseAdmin } from '@/lib/supabase/server';
@@ -8,6 +10,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'My Resumes' };
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ paid?: string }> }) {
+  const missingCfg = missingEnv(SUPABASE_ENV);
+  if (missingCfg.length) return <SetupNotice missing={missingCfg} />;
   const sp = await searchParams;
   const user = await getUser();
   if (!user) redirect('/login?next=/dashboard');
