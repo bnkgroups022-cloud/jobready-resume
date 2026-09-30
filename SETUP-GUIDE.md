@@ -8,8 +8,11 @@ Kisi bhi secret key ko chat, GitHub ya kisi file me paste mat kijiye — sirf Ve
 ## STEP 1 — Supabase (database + login)
 
 1. https://supabase.com → **New project** → Name `jobready-resume`, Region **South Asia (Mumbai)** → **Create**.
-2. **SQL Editor → New query** → `supabase/schema.sql` ka pura content paste → **Run**.
-3. **New query** → `supabase/seed.sql` paste → **Run**.
+2. **SQL Editor → + (New query)** — naya, **khaali** tab. `supabase/schema.sql` Notepad me kholiye → Ctrl+A → Ctrl+C → tab me Ctrl+V → **Run** (koi text select na ho).
+   - "destructive operation" warning aaye to **Run this query** dabaiye (ye sirf purane trigger/policy ko replace karta hai, data delete nahi hota).
+   - Result: `status = schema ok`, `tables = 9`
+3. Phir se **+ (New query)** — naya khaali tab → `supabase/seed.sql` paste → **Run**.
+   - Result: `jobs = 53`, `qualifications = 28`, `templates = 4`
 4. **Authentication → Sign In / Providers → Email** → **Confirm email = OFF** → **Save**.
    (Supabase ka free email sirf team ko jata hai. Baad me custom SMTP lagakar ON kar sakte hain.)
 5. **Authentication → URL Configuration**

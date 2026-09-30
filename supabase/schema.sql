@@ -1,6 +1,9 @@
 -- =====================================================================
--- JobReady Resume — Supabase database schema (run ONCE in SQL Editor)
+-- JobReady Resume - Supabase database schema
+-- STEP 1 of 2: paste this WHOLE file into a NEW, EMPTY SQL Editor tab -> Run.
 -- Safe to re-run: uses "if not exists" / "create or replace".
+-- Creates: profiles, resume_credits, subscriptions, resumes, payments,
+--          jobs, qualifications, templates, device_claims (+ functions, RLS)
 -- =====================================================================
 
 create extension if not exists pgcrypto;
@@ -65,7 +68,7 @@ create index if not exists resumes_created_idx on public.resumes(created_at desc
 create table if not exists public.payments (
   id                   uuid primary key default gen_random_uuid(),
   user_id              uuid not null references public.profiles(id) on delete cascade,
-  amount               integer not null,            -- in paise (₹9 = 900)
+  amount               integer not null,            -- in paise (Rs 9 = 900)
   product              text not null check (product in ('resume_credit','pro_monthly','pro_yearly')),
   payment_type         text not null default 'one_time',
   razorpay_order_id    text unique,
@@ -133,6 +136,77 @@ create table if not exists public.device_claims (
   created_at  timestamptz not null default now()
 );
 create index if not exists device_claims_ip_idx on public.device_claims(ip_hash, created_at);
+
+-- ---------------------------------------------------------------------
+-- UPGRADE SAFETY: if a table already existed from an older/partial setup,
+-- add any missing columns (no data is deleted). Constraints/defaults as above.
+-- ---------------------------------------------------------------------
+alter table public.profiles add column if not exists name text;
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists mobile text;
+alter table public.profiles add column if not exists is_blocked boolean default false;
+alter table public.profiles add column if not exists created_at timestamptz default now();
+alter table public.resume_credits add column if not exists free_resume_used boolean default false;
+alter table public.resume_credits add column if not exists paid_resume_credits integer default 0 check (paid_resume_credits >= 0);
+alter table public.resume_credits add column if not exists updated_at timestamptz default now();
+alter table public.subscriptions add column if not exists user_id uuid references public.profiles(id) on delete cascade;
+alter table public.subscriptions add column if not exists plan text check (plan in ('pro_monthly','pro_yearly'));
+alter table public.subscriptions add column if not exists status text default 'active' check (status in ('active','expired','cancelled'));
+alter table public.subscriptions add column if not exists start_date timestamptz default now();
+alter table public.subscriptions add column if not exists expiry_date timestamptz;
+alter table public.subscriptions add column if not exists razorpay_subscription_id text;
+alter table public.subscriptions add column if not exists updated_at timestamptz default now();
+alter table public.resumes add column if not exists user_id uuid references public.profiles(id) on delete cascade;
+alter table public.resumes add column if not exists job_role text;
+alter table public.resumes add column if not exists job_slug text;
+alter table public.resumes add column if not exists candidate_level text;
+alter table public.resumes add column if not exists template text;
+alter table public.resumes add column if not exists resume_data jsonb;
+alter table public.resumes add column if not exists source text default 'free' check (source in ('free','credit','pro','admin'));
+alter table public.resumes add column if not exists created_at timestamptz default now();
+alter table public.resumes add column if not exists updated_at timestamptz default now();
+alter table public.payments add column if not exists user_id uuid references public.profiles(id) on delete cascade;
+alter table public.payments add column if not exists amount integer;
+alter table public.payments add column if not exists product text check (product in ('resume_credit','pro_monthly','pro_yearly'));
+alter table public.payments add column if not exists payment_type text default 'one_time';
+alter table public.payments add column if not exists razorpay_order_id text;
+alter table public.payments add column if not exists razorpay_payment_id text;
+alter table public.payments add column if not exists status text default 'created' check (status in ('created','paid','failed'));
+alter table public.payments add column if not exists fulfilled boolean default false;
+alter table public.payments add column if not exists created_at timestamptz default now();
+alter table public.payments add column if not exists paid_at timestamptz;
+alter table public.jobs add column if not exists slug text;
+alter table public.jobs add column if not exists title text;
+alter table public.jobs add column if not exists category text default 'Other';
+alter table public.jobs add column if not exists min_qualification_rank integer default 2;
+alter table public.jobs add column if not exists key_skills text[] default '{}';
+alter table public.jobs add column if not exists optional_skills text[] default '{}';
+alter table public.jobs add column if not exists responsibilities text[] default '{}';
+alter table public.jobs add column if not exists learn_suggestions text[] default '{}';
+alter table public.jobs add column if not exists objective_fresher text;
+alter table public.jobs add column if not exists objective_experienced text;
+alter table public.jobs add column if not exists is_active boolean default true;
+alter table public.jobs add column if not exists sort_order integer default 100;
+alter table public.jobs add column if not exists created_at timestamptz default now();
+alter table public.qualifications add column if not exists name text;
+alter table public.qualifications add column if not exists rank integer;
+alter table public.qualifications add column if not exists group_name text default 'School';
+alter table public.qualifications add column if not exists is_active boolean default true;
+alter table public.qualifications add column if not exists sort_order integer default 100;
+alter table public.templates add column if not exists name text;
+alter table public.templates add column if not exists description text;
+alter table public.templates add column if not exists is_pro boolean default false;
+alter table public.templates add column if not exists is_active boolean default true;
+alter table public.templates add column if not exists accent_color text default '#1f3a8a';
+alter table public.templates add column if not exists sort_order integer default 100;
+alter table public.device_claims add column if not exists user_id uuid references public.profiles(id) on delete cascade;
+alter table public.device_claims add column if not exists ip_hash text;
+alter table public.device_claims add column if not exists created_at timestamptz default now();
+create unique index if not exists jobs_slug_key_idx on public.jobs(slug);
+create unique index if not exists qualifications_name_key_idx on public.qualifications(name);
+create unique index if not exists subscriptions_user_id_key_idx on public.subscriptions(user_id);
+create unique index if not exists payments_order_key_idx on public.payments(razorpay_order_id);
+create unique index if not exists payments_payment_key_idx on public.payments(razorpay_payment_id);
 
 -- =====================================================================
 -- New user -> create profile + credit row automatically
@@ -243,8 +317,8 @@ begin
 end $$;
 
 -- =====================================================================
--- FULFIL PAYMENT (idempotent — safe if verify + webhook both call it)
--- ₹9 -> +1 credit | ₹49 -> +30 days Pro | ₹399 -> +365 days Pro
+-- FULFIL PAYMENT (idempotent - safe if verify + webhook both call it)
+-- Rs 9 -> +1 credit | Rs 49 -> +30 days Pro | Rs 399 -> +365 days Pro
 -- =====================================================================
 create or replace function public.fulfill_payment(p_order_id text, p_payment_id text)
 returns boolean
@@ -352,3 +426,22 @@ create policy "public qualifications" on public.qualifications for select using 
 drop policy if exists "public templates" on public.templates;
 create policy "public templates" on public.templates for select using (is_active);
 -- device_claims: no policy = nobody except the server can read/write
+
+-- =====================================================================
+-- TABLE PRIVILEGES (explicit, so the app works even if the project does not
+-- auto-grant new tables to the API roles). RLS above still limits rows.
+-- =====================================================================
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.jobs, public.qualifications, public.templates to anon, authenticated;
+grant select on public.profiles, public.resume_credits, public.subscriptions, public.resumes, public.payments to authenticated;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+
+-- ---------------------------------------------------------------------
+-- Done. Expected result: one row  ->  status = 'schema ok', tables = 9
+-- ---------------------------------------------------------------------
+select 'schema ok' as status,
+       (select count(*) from information_schema.tables
+         where table_schema = 'public'
+           and table_name in ('profiles','resume_credits','subscriptions','resumes','payments',
+                              'jobs','qualifications','templates','device_claims')) as tables;
